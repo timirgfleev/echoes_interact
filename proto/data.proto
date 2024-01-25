@@ -1,0 +1,29 @@
+syntax = "proto2";
+
+package coolProtocol;
+
+
+
+message HostCommand {
+  enum Command {
+    COMMAND_CONNECT = 0;
+    COMMAND_DISCONNECT = 1;
+    COMMAND_GET_DEVICE_INFO = 2;
+  }
+  optional Command command= 1;
+  
+}
+
+message Ping {
+}
+
+message Pong {
+}
+
+message MessageWrapper {
+  oneof message {
+    Ping ping = 1;
+    Pong pong = 2;
+    HostCommand host_command = 3;
+  }
+}
