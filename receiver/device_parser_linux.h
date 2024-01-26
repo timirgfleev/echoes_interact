@@ -27,40 +27,41 @@ public:
     }
 
 protected:
-    std::string get_name()
+    static std::string get_name()
     {
-        const size_t HOST_NAME_MAX = 100;
+        //const size_t HOST_NAME_MAX = 100;
         char hostname[HOST_NAME_MAX];
         gethostname(hostname, HOST_NAME_MAX);
         return std::string(hostname);
     }
 
-    std::string get_os_ver()
+    static std::string get_os_ver()
     {
         struct utsname buffer;
         uname(&buffer);
         return std::string(buffer.sysname) + " " + std::string(buffer.release);
     }
 
-std::string get_serial_number()
-{
-    std::ifstream ifs("/sys/class/dmi/id/product_serial");
-    std::string serial;
+    static std::string get_serial_number()
+    {
+        std::ifstream ifs("/sys/class/dmi/id/product_serial");
+        std::string serial;
 
-    if (!ifs) {
-        serial = "NO SERIAL";
+        if (!ifs)
+        {
+            serial = "NO SERIAL";
+        }
+
+        std::getline(ifs, serial);
+        if (ifs.fail())
+        {
+            serial = "NO SERIAL";
+        }
+
+        return serial;
     }
 
-    
-    std::getline(ifs, serial);
-    if (ifs.fail()) {
-        serial = "NO SERIAL";
-    }
-
-    return serial;
-}
-
-    std::vector<std::string> get_description()
+    static std::vector<std::string> get_description()
     {
         struct sysinfo si;
         sysinfo(&si);
