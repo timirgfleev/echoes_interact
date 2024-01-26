@@ -36,18 +36,26 @@ protected:
             // todo: maybe rewrite as one-liner
             std::istream is(&buffer_);
             coolProtocol::MessageWrapper msg;
-            bool parsing_result = msg.ParseFromIstream(&is);
+            bool parsing_done = msg.ParseFromIstream(&is);
 
             buffer_.consume(buffer_.size());
 
-            if (parsing_result)
+            if (parsing_done)
             {
                 handle_message(std::move(msg));
             }
             else
             {
-                // todo: parse error
+                bad_data();
             }
+        }
+    }
+
+    void send_callback(const boost::system::error_code &error, std::size_t bytes_transferred){
+        if(!error){
+            StartReceive();
+        } else {
+            internal_error();
         }
     }
 
@@ -67,7 +75,6 @@ protected:
                 get_device_info();
                 break;
             default:
-                //todo: host send weir stuff again
                 bad_data();
                 break;
             }
@@ -86,7 +93,18 @@ protected:
     void send_reply(coolProtocol::MessageWrapper reply_msg)
     {
         std::string serialized_msg;
-        //todo: send
+        
+        std::ostream ost(&buffer_);
+
+        bool did_serialize = reply_msg.SerializePartialToOstream(&ost);
+
+        if(did_serialize){
+            
+            boost::asio::async_write(sk_, buffer_, std::bind(&Server::send_callback, this,
+                                          std::placeholders::_1, std::placeholders::_2));
+        } else {
+            internal_error();
+        }
     }
 
     void ping_pong()
@@ -108,6 +126,10 @@ protected:
                             if (!error) {
                             this->on_timeout();
                             } });
+    }
+
+    void internal_error(){
+        close_connection();
     }
 
     void bad_data(){
