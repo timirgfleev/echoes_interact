@@ -18,7 +18,7 @@ struct DeviceInfo
 class DeviceParser
 {
 public:
-    DeviceInfo get_device_info()
+    static DeviceInfo get_device_info()
     {
         return {get_name(),
                 get_os_ver(),
