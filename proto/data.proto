@@ -24,6 +24,6 @@ message MessageWrapper {
   oneof message {
     Ping ping = 1;
     Pong pong = 2;
-    HostCommand host_command = 3;
+    HostCommand request = 3;
   }
 }

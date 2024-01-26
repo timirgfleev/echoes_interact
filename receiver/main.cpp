@@ -12,7 +12,7 @@ public:
     Server(tcp::socket &sk)
         : sk_(sk), expected_()
     {
-        expected_.set_allocated_host_command(new coolProtocol::HostCommand());
+        expected_.set_allocated_request(new coolProtocol::HostCommand());
     }
 
     ~Server(){
@@ -28,9 +28,9 @@ public:
 protected:
     void handle_message(coolProtocol::MessageWrapper host_msg)
     {
-        if (host_msg.has_host_command() && expected_.has_host_command())
+        if (host_msg.has_request() && expected_.has_request())
         {
-            switch (host_msg.host_command().command())
+            switch (host_msg.request().command())
             {
             case coolProtocol::HostCommand::COMMAND_CONNECT :
                 //todo:
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 
     hc->set_command(coolProtocol::HostCommand::Command::HostCommand_Command_COMMAND_CONNECT);
 
-    messageWrapper.set_allocated_host_command(hc);
+    messageWrapper.set_allocated_request(hc);
     // tutorial::Person person;
     // person.set_name("zhangsan");
     // person.set_id(1);
