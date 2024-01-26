@@ -109,11 +109,15 @@ protected:
 
     void ping_pong()
     {
-
+        coolProtocol::MessageWrapper ping;
+        ping.set_allocated_ping(new coolProtocol::Ping);
+        expected_.Clear();
+        expected_.set_allocated_pong(new coolProtocol::Pong);
+        send_reply(ping);
     }
 
     void get_device_info(){
-
+        //todo: send 
     }
 
     void wait_for_reply(u_short deadline = 10)
