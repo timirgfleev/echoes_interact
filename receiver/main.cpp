@@ -15,6 +15,10 @@ public:
         expected_.set_allocated_host_command(new coolProtocol::HostCommand());
     }
 
+    ~Server(){
+        expected_.Clear();
+    }
+
     //
     void StartReceive()
     {
@@ -22,8 +26,29 @@ public:
     }
 
 protected:
-    void handle_message(coolProtocol::HostCommand host_msg)
+    void handle_message(coolProtocol::MessageWrapper host_msg)
     {
+        if (host_msg.has_host_command() && expected_.has_host_command())
+        {
+            switch (host_msg.host_command().command())
+            {
+            case coolProtocol::HostCommand::COMMAND_CONNECT :
+                //todo:
+                break;
+            case coolProtocol::HostCommand::COMMAND_DISCONNECT :
+                //todo:
+                break;
+            case coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO :
+                //todo:
+                break;
+            default:
+                break;
+            }
+        }
+        else if (host_msg.has_pong() && expected_.has_pong())
+        {
+            //todo:
+        }
     }
 
     void ping_pong()
@@ -51,6 +76,7 @@ protected:
 void handle_connection(tcp::socket socket)
 {
     Server s(socket);
+    s.StartReceive();
 }
 
 // main loop
@@ -78,6 +104,8 @@ void listen()
 
 int main(int argc, char *argv[])
 {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+
     coolProtocol::MessageWrapper messageWrapper;
     coolProtocol::HostCommand *hc = new coolProtocol::HostCommand();
 
@@ -92,4 +120,6 @@ int main(int argc, char *argv[])
     std::cout << messageWrapper.IsInitialized();
 
     // delete hc;
+
+    google::protobuf::ShutdownProtobufLibrary();
 }
