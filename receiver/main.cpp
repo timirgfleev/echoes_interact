@@ -27,7 +27,7 @@ public:
                                 std::bind(&Server::message_received_callback, this,
                                           std::placeholders::_1, std::placeholders::_2));
 
-        wait_for_reply(10);
+        
     }
 
 protected:
@@ -77,7 +77,7 @@ protected:
     }
 
     void send_reply(){
-        
+
     }
 
     void ping_pong()
