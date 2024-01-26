@@ -7,23 +7,22 @@
 #include <string>
 #include <vector>
 
-struct DeviceInfo
-{
-    std::string device_name;
-    std::string os_ver;
-    std::string part_number;
-    std::vector<std::string> device_description;
-};
+
+#include "data.pb.h"
 
 class DeviceParser
 {
 public:
-    static DeviceInfo get_device_info()
+    static coolProtocol::DeviceInfo get_device_info()
     {
-        return {get_name(),
-                get_os_ver(),
-                get_serial_number(),
-                get_description()};
+        coolProtocol::DeviceInfo d;
+        
+        d.set_allocated_name(new std::string(get_name()));
+        d.set_allocated_os_ver(new std::string(get_os_ver()));
+        d.set_allocated_part_number(new std::string(get_serial_number()));
+        assign_description(d);
+
+        return d;
     }
 
 protected:
@@ -47,6 +46,7 @@ protected:
         std::ifstream ifs("/sys/class/dmi/id/product_serial");
         std::string serial;
 
+        //of course I could to just not set it in message, but that one I like more
         if (!ifs)
         {
             serial = "NO SERIAL";
@@ -61,7 +61,7 @@ protected:
         return serial;
     }
 
-    static std::vector<std::string> get_description()
+    static void assign_description(coolProtocol::DeviceInfo& d)
     {
         struct sysinfo si;
         sysinfo(&si);
@@ -69,9 +69,10 @@ protected:
         // printf("Free RAM : %ld\n", si.freeram);
         // printf("Total RAM : %ld\n", si.totalram);
         // printf("Process count : %d\n", si.procs);
-        return {std::to_string(si.uptime),
-                std::to_string(si.freeram),
-                std::to_string(si.totalram),
-                std::to_string(si.procs)};
+
+        d.add_desc(std::to_string(si.uptime));
+        d.add_desc(std::to_string(si.freeram));
+        d.add_desc(std::to_string(si.totalram));
+        d.add_desc(std::to_string(si.procs));
     }
 };
