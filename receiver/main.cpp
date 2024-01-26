@@ -2,6 +2,8 @@
 #include <iostream>
 #include <boost/asio.hpp>
 
+#include "device_parser_linux.h"
+
 using boost::asio::ip::tcp;
 
 // server class.
@@ -51,10 +53,14 @@ protected:
         }
     }
 
-    void send_callback(const boost::system::error_code &error, std::size_t bytes_transferred){
-        if(!error){
+    void send_callback(const boost::system::error_code &error, std::size_t bytes_transferred)
+    {
+        if (!error)
+        {
             StartReceive();
-        } else {
+        }
+        else
+        {
             internal_error();
         }
     }
@@ -93,16 +99,18 @@ protected:
     void send_reply(coolProtocol::MessageWrapper reply_msg)
     {
         std::string serialized_msg;
-        
+
         std::ostream ost(&buffer_);
 
         bool did_serialize = reply_msg.SerializePartialToOstream(&ost);
 
-        if(did_serialize){
-            
-            boost::asio::async_write(sk_, buffer_, std::bind(&Server::send_callback, this,
-                                          std::placeholders::_1, std::placeholders::_2));
-        } else {
+        if (did_serialize)
+        {
+
+            boost::asio::async_write(sk_, buffer_, std::bind(&Server::send_callback, this, std::placeholders::_1, std::placeholders::_2));
+        }
+        else
+        {
             internal_error();
         }
     }
@@ -116,8 +124,13 @@ protected:
         send_reply(ping);
     }
 
-    void get_device_info(){
-        //todo: send 
+    void get_device_info()
+    {
+
+        coolProtocol::DeviceInfo *d = new coolProtocol::DeviceInfo(DeviceParser::get_device_info());
+        coolProtocol::MessageWrapper device_info;
+        device_info.set_allocated_device_data(d);
+        send_reply(device_info);
     }
 
     void wait_for_reply(u_short deadline = 10)
@@ -132,11 +145,13 @@ protected:
                             } });
     }
 
-    void internal_error(){
+    void internal_error()
+    {
         close_connection();
     }
 
-    void bad_data(){
+    void bad_data()
+    {
         close_connection();
     }
 
