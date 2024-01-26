@@ -106,20 +106,7 @@ int main(int argc, char *argv[])
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    coolProtocol::MessageWrapper messageWrapper;
-    coolProtocol::HostCommand *hc = new coolProtocol::HostCommand();
-
-    hc->set_command(coolProtocol::HostCommand::Command::HostCommand_Command_COMMAND_CONNECT);
-
-    messageWrapper.set_allocated_request(hc);
-    // tutorial::Person person;
-    // person.set_name("zhangsan");
-    // person.set_id(1);
-    // person.set_email("123");
-
-    std::cout << messageWrapper.IsInitialized();
-
-    // delete hc;
+    //listen();
 
     google::protobuf::ShutdownProtobufLibrary();
 }
