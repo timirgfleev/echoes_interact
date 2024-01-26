@@ -122,6 +122,7 @@ protected:
         expected_.Clear();
         expected_.set_allocated_pong(new coolProtocol::Pong);
         send_reply(ping);
+        wait_for_reply();
     }
 
     void get_device_info()
