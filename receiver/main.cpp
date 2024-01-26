@@ -15,31 +15,52 @@ public:
         expected_.set_allocated_request(new coolProtocol::HostCommand());
     }
 
-    ~Server(){
+    ~Server()
+    {
         expected_.Clear();
     }
 
     //
     void StartReceive()
     {
-        // listen for an inconimg messages
+        boost::asio::async_read(sk_, buffer_,
+                                std::bind(&Server::message_received_callback, this,
+                                          std::placeholders::_1, std::placeholders::_2));
+
+        wait_for_reply(10);
     }
 
 protected:
+    void message_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred)
+    {
+        if (!error)
+        {
+            //todo: maybe rewrite as one-liner
+            std::istream is(&buffer_);
+            coolProtocol::MessageWrapper msg;
+            bool parsing_result = msg.ParseFromIstream(&is);
+            if(parsing_result){
+                handle_message(std::move(msg));
+            } else {
+                //todo: parse error
+            }
+        }
+    }
+
     void handle_message(coolProtocol::MessageWrapper host_msg)
     {
         if (host_msg.has_request() && expected_.has_request())
         {
             switch (host_msg.request().command())
             {
-            case coolProtocol::HostCommand::COMMAND_CONNECT :
-                //todo:
+            case coolProtocol::HostCommand::COMMAND_CONNECT:
+                // todo:
                 break;
-            case coolProtocol::HostCommand::COMMAND_DISCONNECT :
-                //todo:
+            case coolProtocol::HostCommand::COMMAND_DISCONNECT:
+                // todo:
                 break;
-            case coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO :
-                //todo:
+            case coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO:
+                // todo:
                 break;
             default:
                 break;
@@ -47,8 +68,16 @@ protected:
         }
         else if (host_msg.has_pong() && expected_.has_pong())
         {
-            //todo:
+            // todo:
         }
+        else
+        {
+            // host send weird stuff, close conn
+        }
+    }
+
+    void send_reply(){
+        
     }
 
     void ping_pong()
@@ -57,18 +86,22 @@ protected:
 
     void wait_for_reply(u_short deadline = 10)
     {
-        // boost::asio::deadline_timer timer(sk_.get_executor());
+        boost::asio::deadline_timer timer(sk_.get_executor(),
+                                          boost::posix_time::seconds(deadline));
 
-        // if not got message
-        // on_timeout
-        // else handle_message
+        timer.async_wait([this](const boost::system::error_code &error)
+                         {
+                            if (!error) {
+                            this->on_timeout();
+                            } });
     }
 
     void on_timeout()
     {
         // close commection
+        sk_.close();
     }
-
+    boost::asio::streambuf buffer_;
     coolProtocol::MessageWrapper expected_;
     tcp::socket &sk_;
 };
@@ -106,7 +139,7 @@ int main(int argc, char *argv[])
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    //listen();
+    // listen();
 
     google::protobuf::ShutdownProtobufLibrary();
 }
