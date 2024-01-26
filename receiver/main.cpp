@@ -26,8 +26,6 @@ public:
         boost::asio::async_read(sk_, buffer_,
                                 std::bind(&Server::message_received_callback, this,
                                           std::placeholders::_1, std::placeholders::_2));
-
-        
     }
 
 protected:
@@ -35,14 +33,20 @@ protected:
     {
         if (!error)
         {
-            //todo: maybe rewrite as one-liner
+            // todo: maybe rewrite as one-liner
             std::istream is(&buffer_);
             coolProtocol::MessageWrapper msg;
             bool parsing_result = msg.ParseFromIstream(&is);
-            if(parsing_result){
+
+            buffer_.consume(buffer_.size());
+
+            if (parsing_result)
+            {
                 handle_message(std::move(msg));
-            } else {
-                //todo: parse error
+            }
+            else
+            {
+                // todo: parse error
             }
         }
     }
@@ -54,34 +58,44 @@ protected:
             switch (host_msg.request().command())
             {
             case coolProtocol::HostCommand::COMMAND_CONNECT:
-                // todo:
+                ping_pong();
                 break;
             case coolProtocol::HostCommand::COMMAND_DISCONNECT:
-                // todo:
+                close_connection();
                 break;
             case coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO:
-                // todo:
+                get_device_info();
                 break;
             default:
+                //todo: host send weir stuff again
+                bad_data();
                 break;
             }
         }
         else if (host_msg.has_pong() && expected_.has_pong())
         {
-            // todo:
+            expected_.clear_message();
+            expected_.set_allocated_request(new coolProtocol::HostCommand());
         }
         else
         {
-            // host send weird stuff, close conn
+            bad_data();
         }
     }
 
-    void send_reply(){
-
+    void send_reply(coolProtocol::MessageWrapper reply_msg)
+    {
+        std::string serialized_msg;
+        //todo: send
     }
 
     void ping_pong()
     {
+
+    }
+
+    void get_device_info(){
+
     }
 
     void wait_for_reply(u_short deadline = 10)
@@ -96,9 +110,17 @@ protected:
                             } });
     }
 
+    void bad_data(){
+        close_connection();
+    }
+
     void on_timeout()
     {
-        // close commection
+        close_connection();
+    }
+
+    void close_connection()
+    {
         sk_.close();
     }
     boost::asio::streambuf buffer_;
