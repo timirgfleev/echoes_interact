@@ -117,6 +117,8 @@ void Server::process_message(coolProtocol::MessageWrapper host_msg){
     else if (host_msg.has_pong())
     {
         // user is authorizedm let them do whatever they want
+        //todo: maybe add a check for the state of already authorized
+        std::cout << "Permission granted" << std::endl;
         permissions_.reset_permission({Permissions::CONNECT,
                                        Permissions::DISCONNECT,
                                        Permissions::GET_DEVICE_INFO});
