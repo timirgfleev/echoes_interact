@@ -11,7 +11,7 @@ using boost::asio::ip::tcp;
 class Server
 {
 public:
-    Server(tcp::socket &sk);
+    Server(tcp::socket sk);
 
     ~Server();
 
@@ -42,5 +42,5 @@ protected:
     
     boost::asio::streambuf buffer_;
     coolProtocol::MessageWrapper expected_;
-    tcp::socket &sk_;
+    tcp::socket sk_;
 };
