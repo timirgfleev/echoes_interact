@@ -82,6 +82,64 @@ tcp::socket make_socket(boost::asio::io_service &io_service,
     return std::move(client_socket);
 }
 
+void printMenu()
+{
+    std::cout << "Select a command: \n"
+              << "0. Exit\n"
+              << "1. Connect\n"
+              << "2. Disconnect\n"
+              << "3. Get device data\n"
+              << "4. Send pong"
+              << std::endl;
+}
+
+coolProtocol::MessageWrapper process_user_request(int choice, bool &loop)
+{
+    coolProtocol::MessageWrapper msg;
+    switch (choice)
+    {
+    case 0:
+        loop = false;
+        break;
+    case 1:
+        msg = make_host_command(coolProtocol::HostCommand::COMMAND_CONNECT);
+        break;
+    case 2:
+        msg = make_host_command(coolProtocol::HostCommand::COMMAND_DISCONNECT);
+        break;
+    case 3:
+        msg = make_host_command(coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO);
+        break;
+    case 4:
+        msg = make_pong_message();
+        break;
+    default:
+        std::cout << "Invalid choice" << std::endl;
+        break;
+    }
+    return std::move(msg);
+}
+
+void chat(tcp::socket &client_socket)
+{
+    bool loop = true;
+    while (loop)
+    {
+
+        printMenu();
+        int choice;
+        std::cin >> choice;
+
+        auto msg = process_user_request(choice, loop);
+        if (msg.IsInitialized())
+        {
+            send_message(client_socket, msg);
+            auto response = listen_to_message(client_socket);
+            std::cout << "Get message:" << response.DebugString() << std::endl;
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     // GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -90,29 +148,13 @@ int main(int argc, char *argv[])
 
     auto client_socket = make_socket(io_service);
 
-    auto msg = make_host_command(coolProtocol::HostCommand::COMMAND_CONNECT);
-
-    send_message(client_socket, msg);
-
-    auto response = listen_to_message(client_socket);
-
-    auto expected = make_ping_message();
-
-    assert(response.DebugString() == expected.DebugString());
-    std::cout << "assertion passed" << std::endl;
-
-    auto pong = make_pong_message();
-
-    send_message(client_socket, pong);
-
-    auto response2 = listen_to_message(client_socket);
-
-    auto expected2 = make_host_command(coolProtocol::HostCommand::COMMAND_DISCONNECT);
-
-    assert(response2.DebugString() == expected2.DebugString());
-
-    std::cout << "assertion 2 passed" << std::endl;
-
+    try
+    {
+    }
+    catch (std::exception &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
     google::protobuf::ShutdownProtobufLibrary();
 
     return 0;
