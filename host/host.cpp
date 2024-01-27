@@ -1,6 +1,7 @@
 #include <iostream>
 #include <boost/asio.hpp>
-#include "../receiver/server.h"
+
+#include "data.pb.h"
 
 using boost::asio::ip::tcp;
 
