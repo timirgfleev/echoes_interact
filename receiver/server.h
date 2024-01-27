@@ -7,6 +7,9 @@
 #include "device_parser_linux.h"
 
 #include "permission_checker.h"
+
+#include "../include/constants.h"
+
 using boost::asio::ip::tcp;
 
 class Server
@@ -30,7 +33,7 @@ protected:
     void ping_pong();
     void get_device_info();
 
-    void wait_for_reply(u_short deadline = 10);
+    void wait_for_reply(u_short deadline = user_constant::TIMEOT_LEN);
 
     // these are error states
     void persimission_deny();

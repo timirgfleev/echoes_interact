@@ -24,15 +24,17 @@ void listen()
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 1234));
 
         //std::thread io_thread([&io_service]() { io_service.run(); });
-
+        
         for (;;)
         {
             tcp::socket socket(io_service);
+            std::cout << "Ready for connections" << std::endl;
             acceptor.accept(socket);
             std::cout << "conn received" << std::endl;
             std::unique_ptr<Server> srv = handle_connection(std::move(socket));
             srv->StartReceive();
             io_service.run();
+            //todo: add thread pool
         }
     }
     catch (std::exception &e)

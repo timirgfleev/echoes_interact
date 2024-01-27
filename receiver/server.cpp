@@ -21,7 +21,7 @@ Server::~Server()
 void Server::StartReceive()
 {
     std::cout << "Server start" << std::endl;
-    boost::asio::async_read_until(sk_, buffer_, '\0',
+    boost::asio::async_read_until(sk_, buffer_, user_constant::DELIMITER,
                                   std::bind(&Server::message_received_callback, this,
                                             std::placeholders::_1, std::placeholders::_2));
     std::cout << "Server start listen" << std::endl;
@@ -71,6 +71,7 @@ void Server::message_received_callback(const boost::system::error_code &error, s
 void Server::send_callback(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
     std::cout << "Server send callback" << std::endl;
+    std::cout << "Server sent " << bytes_transferred << "bytes" << std::endl;
     if (!error)
     {
         StartReceive();
@@ -125,6 +126,7 @@ void Server::process_message(coolProtocol::MessageWrapper host_msg){
         permissions_.reset_permission({Permissions::CONNECT,
                                        Permissions::DISCONNECT,
                                        Permissions::GET_DEVICE_INFO});
+        StartReceive();
     }
     else
     {
@@ -143,7 +145,7 @@ void Server::send_reply(coolProtocol::MessageWrapper reply_msg)
 
     if (did_serialize)
     {
-        serialized_msg += '\0';
+        serialized_msg += user_constant::DELIMITER;
         boost::asio::async_write(sk_, boost::asio::buffer(serialized_msg), std::bind(&Server::send_callback, this, std::placeholders::_1, std::placeholders::_2));
     }
     else

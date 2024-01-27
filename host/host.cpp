@@ -2,6 +2,7 @@
 #include <boost/asio.hpp>
 
 #include "data.pb.h"
+#include "../include/constants.h"
 
 using boost::asio::ip::tcp;
 
@@ -42,7 +43,11 @@ coolProtocol::MessageWrapper make_host_command(coolProtocol::HostCommand::Comman
 coolProtocol::MessageWrapper listen_to_message(tcp::socket &client_socket)
 {
     boost::asio::streambuf response_buffer;
-    std::size_t bytes_transferred = boost::asio::read_until(client_socket, response_buffer, '\0'); // Read until newline character.
+    std::size_t bytes_transferred = boost::asio::read_until(client_socket, response_buffer, user_constant::DELIMITER); // Read until newline character.
+
+
+    std::cout << "Received " << bytes_transferred << " bytes" << std::endl;
+
 
     std::istream is(&response_buffer);
     std::string response_string(bytes_transferred - 1, 0); // Subtract 1 because read_until includes the delimiter in the count
@@ -65,7 +70,7 @@ size_t send_message(tcp::socket &client_socket, coolProtocol::MessageWrapper &ms
     // serialized_msg += '\n';
     std::cout << "Serialized message as debug str:" << msg.DebugString() << std::endl;
 
-    serialized_msg += '\0';
+    serialized_msg += user_constant::DELIMITER;
 
     return boost::asio::write(client_socket, boost::asio::buffer(serialized_msg));
 }
