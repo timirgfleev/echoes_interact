@@ -7,7 +7,7 @@ void PrintGreentext(std::string text)
 
 Server::Server(tcp::socket sk)
     : sk_(std::move(sk)),
-      permissions_({Permissions::CONNECT}),
+      permissions_({Permissions::CONNECT, Permissions::DISCONNECT}),
       timer_(sk_.get_executor()),
       is_deadline_set_(false)
 {
