@@ -43,4 +43,6 @@ protected:
     boost::asio::streambuf buffer_;
     coolProtocol::MessageWrapper expected_;
     tcp::socket sk_;
+    boost::asio::deadline_timer timer_;
+    bool is_deadline_set_;
 };
