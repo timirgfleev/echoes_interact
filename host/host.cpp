@@ -93,7 +93,7 @@ void printMenu()
               << std::endl;
 }
 
-coolProtocol::MessageWrapper process_user_request(int choice, bool &loop)
+coolProtocol::MessageWrapper process_user_request(int choice, bool &loop, int &wait_for_reply)
 {
     coolProtocol::MessageWrapper msg;
     switch (choice)
@@ -103,18 +103,24 @@ coolProtocol::MessageWrapper process_user_request(int choice, bool &loop)
         break;
     case 1:
         msg = make_host_command(coolProtocol::HostCommand::COMMAND_CONNECT);
+        wait_for_reply = 1;
         break;
     case 2:
         msg = make_host_command(coolProtocol::HostCommand::COMMAND_DISCONNECT);
+        //wait for reply so read drops program
+        wait_for_reply = 1;
         break;
     case 3:
         msg = make_host_command(coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO);
+        wait_for_reply = 1;
         break;
     case 4:
         msg = make_pong_message();
+        wait_for_reply = 0;
         break;
     default:
         std::cout << "Invalid choice" << std::endl;
+        wait_for_reply = 0;
         break;
     }
     return std::move(msg);
@@ -130,12 +136,21 @@ void chat(tcp::socket &client_socket)
         int choice;
         std::cin >> choice;
 
-        auto msg = process_user_request(choice, loop);
+        int wait_for_reply;
+        auto msg = process_user_request(choice, loop, wait_for_reply);
         if (msg.IsInitialized())
         {
             send_message(client_socket, msg);
-            auto response = listen_to_message(client_socket);
-            std::cout << "Get message:" << response.DebugString() << std::endl;
+            if (wait_for_reply)
+            {
+                auto response = listen_to_message(client_socket);
+                std::cout << "Get message:" << response.DebugString() << std::endl;
+            }
+        }
+        else if (!client_socket.is_open())
+        {
+            std::cout << "Connection closed, exit...." << std::endl;
+            loop = false;
         }
     }
 }
@@ -150,6 +165,7 @@ int main(int argc, char *argv[])
 
     try
     {
+        chat(client_socket);
     }
     catch (std::exception &e)
     {
