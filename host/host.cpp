@@ -35,7 +35,7 @@ coolProtocol::MessageWrapper make_host_command(coolProtocol::HostCommand::Comman
     return std::move(msg);
 }
 
-coolProtocol::MessageWrapper get_message(tcp::socket& client_socket){
+coolProtocol::MessageWrapper listen_to_message(tcp::socket& client_socket){
     boost::asio::streambuf response_buffer;
     std::size_t bytes_transferred = boost::asio::read_until(client_socket, response_buffer, '\0'); // Read until newline character.
 
@@ -76,21 +76,13 @@ int main(int argc, char *argv[])
     boost::asio::connect(client_socket, endpoint_iterator);
 
 
-    coolProtocol::MessageWrapper msg;
-
-    coolProtocol::HostCommand *hc = new coolProtocol::HostCommand();
-    hc->set_command(coolProtocol::HostCommand::COMMAND_CONNECT);
-    msg.set_allocated_request(hc);
-
+    auto msg = make_host_command(coolProtocol::HostCommand::COMMAND_CONNECT);
+     
     send_message(client_socket, msg);
 
-    coolProtocol::MessageWrapper response = get_message(client_socket);
-
-
-    coolProtocol::MessageWrapper expected;
-    coolProtocol::Ping ping;
-    expected.set_allocated_ping(&ping);
-
+    auto response = listen_to_message(client_socket);
+    
+    auto expected = make_ping_message();
 
     assert(response.DebugString() == expected.DebugString());
     std::cout << "assertion passed" << std::endl;
