@@ -1,16 +1,21 @@
 #include "server.h"
 
-Server::Server(tcp::socket sk)
-    : sk_(std::move(sk)), expected_()
+void PrintGreentext(std::string text)
 {
-    
-    expected_.set_allocated_request(new coolProtocol::HostCommand());
+    std::cout << "\033[32m" << text << "\033[0m" << std::endl;
+}
+
+Server::Server(tcp::socket sk)
+    : sk_(std::move(sk)),
+      permissions_({Permissions::CONNECT}),
+      timer_(sk_.get_executor()),
+      is_deadline_set_(false)
+{
 }
 
 Server::~Server()
 {
     std::cout << "Server destructor" << std::endl;
-    expected_.Clear();
 }
 
 void Server::StartReceive()
@@ -24,6 +29,12 @@ void Server::StartReceive()
 
 void Server::message_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
+
+    if (is_deadline_set_)
+    {
+        timer_.cancel();
+    }
+
     std::cout << "Server received" << std::endl;
     if (!error)
     {
@@ -36,7 +47,7 @@ void Server::message_received_callback(const boost::system::error_code &error, s
 
         buffer_.consume(buffer_.size());
 
-        //std::cout << "Server get{" << msg.DebugString() << '}' << std::endl;
+        // std::cout << "Server get{" << msg.DebugString() << '}' << std::endl;
 
         if (parsing_done)
         {
@@ -50,7 +61,7 @@ void Server::message_received_callback(const boost::system::error_code &error, s
     }
     else
     {
-        throw std::runtime_error("Server error");
+        throw std::runtime_error("Server error exception");
     }
 }
 
@@ -69,11 +80,27 @@ void Server::send_callback(const boost::system::error_code &error, std::size_t b
 
 void Server::handle_message(coolProtocol::MessageWrapper host_msg)
 {
-    if (host_msg.has_request() && expected_.has_request())
+    PrintGreentext("Server received: " + host_msg.DebugString());
+    bool has_permission = permissions_.check_permission(host_msg);
+
+    if (has_permission)
     {
+        process_message(std::move(host_msg));
+    }
+    else
+    {
+        persimission_deny();
+    }
+}
+
+void Server::process_message(coolProtocol::MessageWrapper host_msg){
+    if (host_msg.has_request())
+    {
+
         switch (host_msg.request().command())
         {
         case coolProtocol::HostCommand::COMMAND_CONNECT:
+
             ping_pong();
             break;
         case coolProtocol::HostCommand::COMMAND_DISCONNECT:
@@ -87,10 +114,12 @@ void Server::handle_message(coolProtocol::MessageWrapper host_msg)
             break;
         }
     }
-    else if (host_msg.has_pong() && expected_.has_pong())
+    else if (host_msg.has_pong())
     {
-        expected_.clear_message();
-        expected_.set_allocated_request(new coolProtocol::HostCommand());
+        // user is authorizedm let them do whatever they want
+        permissions_.reset_permission({Permissions::CONNECT,
+                                       Permissions::DISCONNECT,
+                                       Permissions::GET_DEVICE_INFO});
     }
     else
     {
@@ -109,7 +138,7 @@ void Server::send_reply(coolProtocol::MessageWrapper reply_msg)
 
     if (did_serialize)
     {
-        serialized_msg += '\n';
+        // serialized_msg += '\n';
         boost::asio::async_write(sk_, boost::asio::buffer(serialized_msg), std::bind(&Server::send_callback, this, std::placeholders::_1, std::placeholders::_2));
     }
     else
@@ -123,8 +152,9 @@ void Server::ping_pong()
     std::cout << "Server ping" << std::endl;
     coolProtocol::MessageWrapper ping;
     ping.set_allocated_ping(new coolProtocol::Ping);
-    expected_.Clear();
-    expected_.set_allocated_pong(new coolProtocol::Pong);
+
+    permissions_.reset_permission({Permissions::PONG});
+
     send_reply(ping);
     wait_for_reply();
 }
@@ -141,13 +171,12 @@ void Server::get_device_info()
 void Server::wait_for_reply(u_short deadline)
 {
     std::cout << "Server timer" << std::endl;
-    boost::asio::deadline_timer timer(sk_.get_executor(),
-                                      boost::posix_time::seconds(deadline));
+    is_deadline_set_ = true;
+    timer_.expires_from_now(boost::posix_time::seconds(deadline));
 
-    timer.async_wait([this](const boost::system::error_code &error)
-                     {
-                            if (!error) {
-                            this->on_timeout();
+    timer_.async_wait([this](const boost::system::error_code &error)
+                      { if (!error && sk_.is_open()) {
+                                this->on_timeout();
                             } });
 }
 
@@ -163,8 +192,15 @@ void Server::bad_data()
     close_connection();
 }
 
+void Server::persimission_deny()
+{
+    std::cout << "Server refuses to answer that" << std::endl;
+    close_connection();
+}
+
 void Server::on_timeout()
 {
+    std::cout << "Server timeout" << std::endl;
     close_connection();
 }
 
