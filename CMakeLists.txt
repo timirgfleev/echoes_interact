@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(info_service VERSION 0.1.0 LANGUAGES C CXX)
 
-include(CTest)
-enable_testing()
+set(CMAKE_BUILD_TYPE Debug)
+
+# include(CTest)
+# enable_testing()
 
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
@@ -22,3 +24,8 @@ target_link_libraries(info_service ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
+
+
+add_executable(infohost host/host.cpp receiver/server.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+
+target_link_libraries(infohost ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
