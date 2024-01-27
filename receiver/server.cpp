@@ -35,12 +35,15 @@ void Server::message_received_callback(const boost::system::error_code &error, s
         timer_.cancel();
     }
 
-    std::cout << "Server received" << std::endl;
+    std::cout << "Server received " << bytes_transferred << "bytes" << std::endl;
     if (!error)
     {
         std::istream is(&buffer_);
-        std::string line(bytes_transferred, 0);
-        is.read(&line[0], bytes_transferred); // sizeof(char) = 1
+        std::string line(bytes_transferred - 1, 0);
+        is.read(&line[0], bytes_transferred - 1); // sizeof(char) = 1
+
+        //line.pop_back();
+
         coolProtocol::MessageWrapper msg;
 
         bool parsing_done = msg.ParseFromString(line);
@@ -140,7 +143,7 @@ void Server::send_reply(coolProtocol::MessageWrapper reply_msg)
 
     if (did_serialize)
     {
-        // serialized_msg += '\n';
+        serialized_msg += '\0';
         boost::asio::async_write(sk_, boost::asio::buffer(serialized_msg), std::bind(&Server::send_callback, this, std::placeholders::_1, std::placeholders::_2));
     }
     else

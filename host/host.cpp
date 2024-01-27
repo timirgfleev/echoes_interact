@@ -44,8 +44,8 @@ coolProtocol::MessageWrapper listen_to_message(tcp::socket &client_socket)
     std::size_t bytes_transferred = boost::asio::read_until(client_socket, response_buffer, '\0'); // Read until newline character.
 
     std::istream is(&response_buffer);
-    std::string response_string(bytes_transferred, 0); // Subtract 1 because read_until includes the delimiter in the count
-    is.read(&response_string[0], bytes_transferred);
+    std::string response_string(bytes_transferred - 1, 0); // Subtract 1 because read_until includes the delimiter in the count
+    is.read(&response_string[0], bytes_transferred - 1);
 
     coolProtocol::MessageWrapper response;
     bool parsing_done = response.ParseFromString(response_string);
@@ -62,7 +62,7 @@ size_t send_message(tcp::socket &client_socket, coolProtocol::MessageWrapper &ms
     bool did_serialize = msg.SerializeToString(&serialized_msg);
     std::cout << "serialize:" << did_serialize << std::endl;
     // serialized_msg += '\n';
-    std::cout << "Serialized message: " << serialized_msg << std::endl;
+    std::cout << "Serialized message as debug str:" << msg.DebugString() << std::endl;
 
     serialized_msg += '\0';
 
@@ -140,7 +140,8 @@ void chat(tcp::socket &client_socket)
         auto msg = process_user_request(choice, loop, wait_for_reply);
         if (msg.IsInitialized())
         {
-            send_message(client_socket, msg);
+            size_t bytes_transfered = send_message(client_socket, msg);
+            std::cout << "Sent " << bytes_transfered << " bytes" << std::endl;
             if (wait_for_reply)
             {
                 auto response = listen_to_message(client_socket);
