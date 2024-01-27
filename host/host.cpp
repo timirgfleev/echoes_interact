@@ -4,7 +4,8 @@
 
 using boost::asio::ip::tcp;
 
-coolProtocol::MessageWrapper make_pong_message(){
+coolProtocol::MessageWrapper make_pong_message()
+{
     std::cout << "pong" << std::endl;
 
     coolProtocol::MessageWrapper msg;
@@ -14,7 +15,8 @@ coolProtocol::MessageWrapper make_pong_message(){
     return std::move(msg);
 }
 
-coolProtocol::MessageWrapper make_ping_message(){
+coolProtocol::MessageWrapper make_ping_message()
+{
     std::cout << "ping" << std::endl;
 
     coolProtocol::MessageWrapper msg;
@@ -24,7 +26,8 @@ coolProtocol::MessageWrapper make_ping_message(){
     return std::move(msg);
 }
 
-coolProtocol::MessageWrapper make_host_command(coolProtocol::HostCommand::Command command){
+coolProtocol::MessageWrapper make_host_command(coolProtocol::HostCommand::Command command)
+{
     std::cout << "host command" << std::endl;
 
     coolProtocol::MessageWrapper msg;
@@ -35,7 +38,8 @@ coolProtocol::MessageWrapper make_host_command(coolProtocol::HostCommand::Comman
     return std::move(msg);
 }
 
-coolProtocol::MessageWrapper listen_to_message(tcp::socket& client_socket){
+coolProtocol::MessageWrapper listen_to_message(tcp::socket &client_socket)
+{
     boost::asio::streambuf response_buffer;
     std::size_t bytes_transferred = boost::asio::read_until(client_socket, response_buffer, '\0'); // Read until newline character.
 
@@ -52,7 +56,8 @@ coolProtocol::MessageWrapper listen_to_message(tcp::socket& client_socket){
     return std::move(response);
 }
 
-void send_message(tcp::socket& client_socket, coolProtocol::MessageWrapper& msg){
+size_t send_message(tcp::socket &client_socket, coolProtocol::MessageWrapper &msg)
+{
     std::string serialized_msg;
     bool did_serialize = msg.SerializeToString(&serialized_msg);
     std::cout << "serialize:" << did_serialize << std::endl;
@@ -61,7 +66,20 @@ void send_message(tcp::socket& client_socket, coolProtocol::MessageWrapper& msg)
 
     serialized_msg += '\0';
 
-    boost::asio::write(client_socket, boost::asio::buffer(serialized_msg));
+    return boost::asio::write(client_socket, boost::asio::buffer(serialized_msg));
+}
+
+tcp::socket make_socket(boost::asio::io_service &io_service,
+                        std::string host = "localhost",
+                        std::string port = "1234")
+{
+    tcp::resolver resolver(io_service);
+    tcp::resolver::query query(host, port);
+    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+    tcp::socket client_socket(io_service);
+    boost::asio::connect(client_socket, endpoint_iterator);
+
+    return std::move(client_socket);
 }
 
 int main(int argc, char *argv[])
@@ -69,22 +87,33 @@ int main(int argc, char *argv[])
     // GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     boost::asio::io_service io_service;
-    tcp::resolver resolver(io_service);
-    tcp::resolver::query query("localhost", "1234");
-    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-    tcp::socket client_socket(io_service);
-    boost::asio::connect(client_socket, endpoint_iterator);
 
+    auto client_socket = make_socket(io_service);
 
     auto msg = make_host_command(coolProtocol::HostCommand::COMMAND_CONNECT);
-     
+
     send_message(client_socket, msg);
 
     auto response = listen_to_message(client_socket);
-    
+
     auto expected = make_ping_message();
 
     assert(response.DebugString() == expected.DebugString());
     std::cout << "assertion passed" << std::endl;
-    //google::protobuf::ShutdownProtobufLibrary();
+
+    auto pong = make_pong_message();
+
+    send_message(client_socket, pong);
+
+    auto response2 = listen_to_message(client_socket);
+
+    auto expected2 = make_host_command(coolProtocol::HostCommand::COMMAND_DISCONNECT);
+
+    assert(response2.DebugString() == expected2.DebugString());
+
+    std::cout << "assertion 2 passed" << std::endl;
+
+    google::protobuf::ShutdownProtobufLibrary();
+
+    return 0;
 }
