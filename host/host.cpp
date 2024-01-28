@@ -42,19 +42,16 @@ coolProtocol::MessageWrapper make_host_command(coolProtocol::HostCommand::Comman
 
 coolProtocol::MessageWrapper listen_to_message(tcp::socket &client_socket)
 {
-    boost::asio::streambuf response_buffer;
-    std::size_t bytes_transferred = boost::asio::read_until(client_socket, response_buffer, user_constant::DELIMITER); // Read until newline character.
+    uint32_t msg_size;
+    boost::asio::read(client_socket, boost::asio::buffer(&msg_size, sizeof(msg_size)));
 
+    std::vector<char> response_buffer(msg_size);
+    boost::asio::read(client_socket, boost::asio::buffer(response_buffer));
 
-    std::cout << "Received " << bytes_transferred << " bytes" << std::endl;
-
-
-    std::istream is(&response_buffer);
-    std::string response_string(bytes_transferred - 1, 0); // Subtract 1 because read_until includes the delimiter in the count
-    is.read(&response_string[0], bytes_transferred - 1);
+    std::cout << "Received " << msg_size << " bytes" << std::endl;
 
     coolProtocol::MessageWrapper response;
-    bool parsing_done = response.ParseFromString(response_string);
+    bool parsing_done = response.ParseFromArray(response_buffer.data(), msg_size);
 
     if (!parsing_done)
         throw std::runtime_error("Server send weird message");
@@ -66,13 +63,19 @@ size_t send_message(tcp::socket &client_socket, coolProtocol::MessageWrapper &ms
 {
     std::string serialized_msg;
     bool did_serialize = msg.SerializeToString(&serialized_msg);
+
     std::cout << "serialize:" << did_serialize << std::endl;
-    // serialized_msg += '\n';
     std::cout << "Serialized message as debug str:" << msg.DebugString() << std::endl;
 
-    serialized_msg += user_constant::DELIMITER;
+    // size_t -> uint32 to make len fixed (size_t can be different)
+    uint32_t msg_size = serialized_msg.size();
 
-    return boost::asio::write(client_socket, boost::asio::buffer(serialized_msg));
+    auto bytes_sent = boost::asio::write(client_socket, boost::asio::buffer(&msg_size, sizeof(msg_size)));
+
+    // Then, send the message itself
+    bytes_sent+= boost::asio::write(client_socket, boost::asio::buffer(serialized_msg));
+
+    return bytes_sent;
 }
 
 tcp::socket make_socket(boost::asio::io_service &io_service,

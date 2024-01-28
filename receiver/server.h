@@ -26,6 +26,8 @@ protected:
     void send_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
     void send_reply(coolProtocol::MessageWrapper reply_msg);
 
+    
+    void size_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
     void message_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
     void handle_message(coolProtocol::MessageWrapper host_msg);
     void process_message(coolProtocol::MessageWrapper host_msg);
@@ -45,7 +47,8 @@ protected:
 
 private:
     Permission_Chercker permissions_;
-
+    int32_t next_message_size_;
+    
     boost::asio::streambuf buffer_;
     tcp::socket sk_;
     boost::asio::deadline_timer timer_;
