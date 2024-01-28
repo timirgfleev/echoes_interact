@@ -68,7 +68,7 @@ size_t send_message(tcp::socket &client_socket, coolProtocol::MessageWrapper &ms
     std::cout << "Serialized message as debug str:" << msg.DebugString() << std::endl;
 
     // size_t -> uint32 to make len fixed (size_t can be different)
-    uint32_t msg_size = serialized_msg.size();
+    user_constant::MESSAGE_SIZE msg_size = serialized_msg.size();
 
     auto bytes_sent = boost::asio::write(client_socket, boost::asio::buffer(&msg_size, sizeof(msg_size)));
 

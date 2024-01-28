@@ -5,13 +5,6 @@ void PrintGreentext(std::string text)
     std::cout << "\033[32m" << text << "\033[0m" << std::endl;
 }
 
-// save me
-// i'm losing my only dream
-//  i could use some guiding light
-//  some place to go
-//  if you hear me let me know
-//  if you hear me let me know
-//
 Server::Server(tcp::socket sk)
     : sk_(std::move(sk)),
       permissions_({Permissions::CONNECT, Permissions::DISCONNECT}),
@@ -27,7 +20,6 @@ Server::~Server()
     std::cout << "Server destructor" << std::endl;
 }
 
-// todo: smth about size_t maybe not always same size, not sure
 void Server::StartReceive()
 {
     std::cout << "Server start" << std::endl;

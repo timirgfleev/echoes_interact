@@ -47,7 +47,7 @@ protected:
 
 private:
     Permission_Chercker permissions_;
-    int32_t next_message_size_;
+    user_constant::MESSAGE_SIZE next_message_size_;
     
     boost::asio::streambuf buffer_;
     tcp::socket sk_;
