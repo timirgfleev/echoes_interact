@@ -3,8 +3,8 @@ project(info_service VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_BUILD_TYPE Debug)
 
-# include(CTest)
-# enable_testing()
+include(CTest)
+enable_testing()
 
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
@@ -29,3 +29,7 @@ include(CPack)
 add_executable(infohost host/host.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 
 target_link_libraries(infohost ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+
+# Tests
+add_executable(LauncherTest test/cmd_args.cpp receiver/launcher.cpp)
+add_test(NAME LauncherTest COMMAND LauncherTest)
