@@ -4,7 +4,7 @@ Server::Server(tcp::socket sk)
     : sk_(std::move(sk)),
       buffer_(),
       next_message_size_(0),
-      timer_(sk.get_executor()),
+      timer_(sk_.get_executor()),
       is_deadline_set_(false),
       msg_processer_(),
       state_(ServerError::OK)
