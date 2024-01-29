@@ -2,7 +2,8 @@
 
 MessageProcesser::MessageProcesser()
     : permissions_({Permissions::CONNECT, Permissions::DISCONNECT}),
-      state_(ProcessingState::SUCCESS)
+      state_(ProcessingState::SUCCESS),
+      deadline_set_(false)
 {
 }
 
@@ -14,7 +15,7 @@ MessageProcesser::handle_message(coolProtocol::MessageWrapper host_msg)
         deadline_set_ = false;
     }
 
-    std::unique_ptr<coolProtocol::MessageWrapper> response;
+    std::unique_ptr<coolProtocol::MessageWrapper> response(nullptr);
     // PrintGreentext("Server received: " + host_msg.DebugString());
     bool has_permission = permissions_.check_permission(host_msg);
 
