@@ -33,3 +33,7 @@ target_link_libraries(infohost ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 # Tests
 add_executable(LauncherTest test/cmd_args.cpp receiver/launcher.cpp)
 add_test(NAME LauncherTest COMMAND LauncherTest)
+
+add_executable(MessageProcessorTest test/msg_process.cpp receiver/message_processor.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+target_link_libraries(MessageProcessorTest ${PROTOBUF_LIBRARIES})
+add_test(NAME MessageProcessorTest COMMAND MessageProcessorTest)
