@@ -7,3 +7,4 @@
 typedef boost::asio::ip::port_type Port;
 
 void listen_for(Port port, size_t exit_after);
+void launcher(int argc, char *argv[]);
