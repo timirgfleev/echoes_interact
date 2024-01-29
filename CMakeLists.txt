@@ -15,7 +15,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS proto/data.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS proto/messages.proto)
 
 add_executable(info_service receiver/main.cpp receiver/launcher.cpp receiver/main_loop.cpp receiver/server.cpp receiver/message_processor.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 

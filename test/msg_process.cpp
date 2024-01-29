@@ -1,7 +1,7 @@
 // message_processor_test.cpp
 #include <cassert>
 #include "../receiver/message_processor.h"
-#include "data.pb.h"
+#include "messages.pb.h"
 
 // standard behaviour
 void connect_and_get_data()

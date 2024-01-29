@@ -1,7 +1,7 @@
 #include <iostream>
 #include <boost/asio.hpp>
 
-#include "data.pb.h"
+#include "messages.pb.h"
 #include "../include/constants.h"
 
 using boost::asio::ip::tcp;
