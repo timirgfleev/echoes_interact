@@ -2,9 +2,9 @@
 
 This project is a server-client application that uses Google's Protocol Buffers for communication.
 
-# Server description
+## Server description
 
-## Event Sequence
+### Event Sequence
 
 1. Open endpoint on port.
 2. Start main loop.
@@ -16,12 +16,12 @@ This project is a server-client application that uses Google's Protocol Buffers 
 5. Continue the main loop.
 6. Check for main loop exit.
 
-## Class Description
+### Class Description
 
 - `Server`: Operates the message exchange loop. It relies on the `MessageProcessor` member to interact with messages.
 - `MessageProcessor`: Manages messages. It relies on `PermissionChecker` to manage user access for actions. It provides an interface to check if a message suggests a timeout and to check the status of a message action.
 
-# Client description
+## Client description
 - as simple as possible
 - prints menu, reads digits to choose options
 - Can close connection, also can be forcefully closed with ctrl+c 
