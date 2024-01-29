@@ -1,3 +1,5 @@
+#pragma once
+
 #include "data.pb.h"
 #include <string>
 #include <vector>
