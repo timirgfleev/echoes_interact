@@ -1,6 +1,6 @@
 // message_processor_test.cpp
 #include <cassert>
-#include "../receiver/message_processor.h"
+#include "../receiver/message_processer.h"
 #include "messages.pb.h"
 
 // standard behaviour

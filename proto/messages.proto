@@ -21,13 +21,14 @@ message DeviceInfo {
   repeated string desc = 4;
 }
 
-// these 3 are primary messages. They are the ones being sent
+
 message Ping {
 }
 
 message Pong {
 }
 
+// primary message. Only this one is sent over the wire
 message MessageWrapper {
   oneof message {
     Ping ping = 1;
