@@ -8,7 +8,11 @@ MessageProcesser::MessageProcesser()
 
 std::unique_ptr<coolProtocol::MessageWrapper>
 MessageProcesser::handle_message(coolProtocol::MessageWrapper host_msg)
-{
+{   
+    if(deadline_set_){
+        deadline_set_ = false;
+    }
+
     std::unique_ptr<coolProtocol::MessageWrapper> response;
     // PrintGreentext("Server received: " + host_msg.DebugString());
     bool has_permission = permissions_.check_permission(host_msg);
@@ -72,24 +76,22 @@ std::unique_ptr<coolProtocol::MessageWrapper>
 MessageProcesser::ping_pong()
 {
     std::cout << "Server ping" << std::endl;
-    coolProtocol::MessageWrapper ping;
-    ping.set_allocated_ping(new coolProtocol::Ping);
+    auto ping = std::make_unique<coolProtocol::MessageWrapper>();
+    ping->set_allocated_ping(new coolProtocol::Ping);
 
     permissions_.reset_permission({Permissions::PONG});
 
-    auto result = std::make_unique<coolProtocol::MessageWrapper>(ping);
-
     deadline_set_ = true;
-    return result;
+    return ping;
 }
 
 std::unique_ptr<coolProtocol::MessageWrapper>
 MessageProcesser::get_device_info() const
 {
     coolProtocol::DeviceInfo *d = new coolProtocol::DeviceInfo(DeviceParser::get_device_info());
-    coolProtocol::MessageWrapper device_info;
-    device_info.set_allocated_device_data(d);
-    return std::make_unique<coolProtocol::MessageWrapper>(device_info);
+    auto device_info = std::make_unique<coolProtocol::MessageWrapper>();
+    device_info->set_allocated_device_data(d);
+    return device_info;
 }
 
 bool MessageProcesser::is_deadline_set() const
