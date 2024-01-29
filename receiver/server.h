@@ -11,9 +11,12 @@
 
 using boost::asio::ip::tcp;
 
-
-
-
+/*
+ * Server class is responsible for communications with client.
+ * It operates prefixed size messages (two step communicating process)
+ * If received message is valid message, it is passed to MessageProcesser
+ * If anythig goes wrong, server goes to corresponding error state
+ */
 class Server
 {
 public:
@@ -44,21 +47,18 @@ protected:
     void wait_for_reply(u_short deadline = user_constant::TIMEOT_LEN);
     void on_timeout();
 
-    // std::unique_ptr<coolProtocol::MessageWrapper>
-    // get_device_info();
-
     void close_connection();
     bool is_continue_state(MessageProcesser::ProcessingState error);
 
 private:
     ServerError state_;
+    tcp::socket sk_;
 
-    MessageProcesser msg_processer_;
     user_constant::MESSAGE_SIZE next_message_size_;
     boost::asio::streambuf buffer_;
-    tcp::socket sk_;
+
+    MessageProcesser msg_processer_;
 
     boost::asio::deadline_timer timer_;
     bool is_deadline_set_;
 };
-

@@ -8,6 +8,13 @@
 #include "permission_checker.h"
 #include "../include/constants.h"
 
+/*
+ * MessageProcesser is responsible for handling message
+ * It does check permissions and call corresponding functions
+ * That way reply is generated (or none via nullptr)
+ * It requests deadline for reply, if processed message implies it
+ * It also gets into error state, if something goes wrong
+ */
 class MessageProcesser
 {
 public:
