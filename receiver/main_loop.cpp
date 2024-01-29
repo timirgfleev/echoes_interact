@@ -1,6 +1,5 @@
 #include "main_loop.h"
 
-
 std::unique_ptr<Server> handle_connection(tcp::socket socket)
 {
     std::unique_ptr<Server> s = std::make_unique<Server>(std::move(socket));

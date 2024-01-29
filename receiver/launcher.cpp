@@ -1,7 +1,7 @@
 #include "launcher.h"
 #include "../include/constants.h"
 
-void launcher(int argc, char *argv[])
+void launcher(const int argc, const char *argv[])
 {
     try
     {

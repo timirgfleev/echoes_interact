@@ -1,12 +1,7 @@
 #include "launcher.h"
 #include "data.pb.h"
 
-
-
-
-
-
-int main(int argc, char *argv[])
+int main(const int argc, const char *argv[])
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
