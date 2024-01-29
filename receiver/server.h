@@ -44,7 +44,7 @@ protected:
     void size_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
     void message_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
 
-    void wait_for_reply(u_short deadline = user_constant::TIMEOT_LEN);
+    void wait_for_reply(u_short deadline = config::TIMEOT_LEN);
     void on_timeout();
 
     void close_connection();
@@ -54,7 +54,7 @@ private:
     ServerError state_;
     tcp::socket sk_;
 
-    user_constant::MESSAGE_SIZE next_message_size_;
+    config::MESSAGE_SIZE next_message_size_;
     boost::asio::streambuf buffer_;
 
     MessageProcesser msg_processer_;

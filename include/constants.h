@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-namespace user_constant
+namespace config
 {
     const int DEFAULT_LOOP_COUNT = 3;
     const int DEF_PORT = 1234;
