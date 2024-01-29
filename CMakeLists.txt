@@ -17,7 +17,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS proto/messages.proto)
 
-add_executable(info_service receiver/main.cpp receiver/launcher.cpp receiver/main_loop.cpp receiver/server.cpp receiver/message_processor.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(info_service receiver/main.cpp receiver/launcher.cpp receiver/main_loop.cpp receiver/server.cpp receiver/message_processer.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 
 target_link_libraries(info_service ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 
@@ -34,6 +34,6 @@ target_link_libraries(infohost ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 add_executable(LauncherTest test/cmd_args.cpp receiver/launcher.cpp)
 add_test(NAME LauncherTest COMMAND LauncherTest)
 
-add_executable(MessageProcessorTest test/msg_process.cpp receiver/message_processor.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(MessageProcessorTest test/msg_process.cpp receiver/message_processer.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 target_link_libraries(MessageProcessorTest ${PROTOBUF_LIBRARIES})
 add_test(NAME MessageProcessorTest COMMAND MessageProcessorTest)
