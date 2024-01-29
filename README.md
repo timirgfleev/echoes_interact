@@ -89,15 +89,14 @@ ctest
 
 ### valgrind test
 ```
-==14176== HEAP SUMMARY:
-==14176==     in use at exit: 0 bytes in 0 blocks
-==14176==   total heap usage: 1,894 allocs, 1,894 frees, 238,918 bytes allocated
-==14176== 
-==14176== All heap blocks were freed -- no leaks are possible
-==14176== 
-==14176== Use --track-origins=yes to see where uninitialised values come from
-==14176== For lists of detected and suppressed errors, rerun with: -s
-==14176== ERROR SUMMARY: 3 errors from 1 contexts (suppressed: 0 from 0)
+==3416== HEAP SUMMARY:
+==3416==     in use at exit: 0 bytes in 0 blocks
+==3416==   total heap usage: 1,928 allocs, 1,928 frees, 257,678 bytes allocated
+==3416== 
+==3416== All heap blocks were freed -- no leaks are possible
+==3416== 
+==3416== For lists of detected and suppressed errors, rerun with: -s
+==3416== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
 
 ## Files
