@@ -26,9 +26,9 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
 
-add_executable(infohost host/host.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(info_client host/host.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 
-target_link_libraries(infohost ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(info_client ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 
 # Tests
 add_executable(LauncherTest test/cmd_args.cpp receiver/launcher.cpp)
