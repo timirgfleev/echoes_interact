@@ -77,7 +77,7 @@ void Server::message_received_callback(const boost::system::error_code &error, s
 
             auto error = msg_processer_.get_state();
 
-            if (!is_continue_state(error))
+            if (!process_erors_is_continue(error))
             {
                 // std::cout << "Server error: " << static_cast<int>(error) << std::endl;
                 close_connection();
@@ -123,7 +123,7 @@ void Server::send_callback(const boost::system::error_code &error, std::size_t b
     }
 }
 
-bool Server::is_continue_state(MessageProcesser::ProcessingState error)
+bool Server::process_erors_is_continue(MessageProcesser::ProcessingState error)
 {
     bool res = false;
     switch (error)

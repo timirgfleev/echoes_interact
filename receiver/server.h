@@ -35,23 +35,30 @@ public:
     ServerError get_state() const;
     ~Server();
 
+    // server loop below, listed in call order:
     void StartReceive();
 
 protected:
-    void send_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
-    void send_reply(coolProtocol::MessageWrapper reply_msg);
-
     void size_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
     void message_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
 
+    // this one is called to look for need of going to exit point
+    bool process_erors_is_continue(MessageProcesser::ProcessingState error);
+    // setup auto exit point
     void wait_for_reply(u_short deadline = config::TIMEOT_LEN);
-    void on_timeout();
 
+    void send_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
+    void send_reply(coolProtocol::MessageWrapper reply_msg);
+    // server loop above
+
+    // these two are exit points from server loop
+    void on_timeout();
     void close_connection();
-    bool is_continue_state(MessageProcesser::ProcessingState error);
 
 private:
     ServerError state_;
+
+    // sk_ has to be initialized before or timer_
     tcp::socket sk_;
 
     config::MESSAGE_SIZE next_message_size_;
