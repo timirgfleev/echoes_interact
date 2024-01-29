@@ -38,7 +38,7 @@ public:
         expected_.push_back(p);
     }
 
-    bool check_permission(const Permissions &p)
+    bool check_permission(const Permissions &p) const
     {
         return std::count(expected_.begin(), expected_.end(), p);
     }

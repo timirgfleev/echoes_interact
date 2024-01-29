@@ -84,7 +84,7 @@ MessageProcesser::ping_pong()
 }
 
 std::unique_ptr<coolProtocol::MessageWrapper>
-MessageProcesser::get_device_info()
+MessageProcesser::get_device_info() const
 {
     coolProtocol::DeviceInfo *d = new coolProtocol::DeviceInfo(DeviceParser::get_device_info());
     coolProtocol::MessageWrapper device_info;
@@ -92,13 +92,13 @@ MessageProcesser::get_device_info()
     return std::make_unique<coolProtocol::MessageWrapper>(device_info);
 }
 
-bool MessageProcesser::is_deadline_set()
+bool MessageProcesser::is_deadline_set() const
 {
     return deadline_set_;
 }
 
 MessageProcesser::ProcessingState
-MessageProcesser::get_state()
+MessageProcesser::get_state() const
 {
     return state_;
 }

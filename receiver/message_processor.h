@@ -27,16 +27,16 @@ public:
     std::unique_ptr<coolProtocol::MessageWrapper>
     handle_message(coolProtocol::MessageWrapper host_msg);
 
-    ProcessingState get_state();
+    ProcessingState get_state() const;
 
-    bool is_deadline_set();
+    bool is_deadline_set() const;
 
 protected:
     std::unique_ptr<coolProtocol::MessageWrapper> process_message(coolProtocol::MessageWrapper host_msg);
 
     std::unique_ptr<coolProtocol::MessageWrapper> ping_pong();
 
-    std::unique_ptr<coolProtocol::MessageWrapper> get_device_info();
+    std::unique_ptr<coolProtocol::MessageWrapper> get_device_info() const;
 
 private:
     ProcessingState state_;
