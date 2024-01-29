@@ -1,28 +1,28 @@
 #include "server.h"
 
-void PrintGreentext(std::string text)
-{
-    std::cout << "\033[32m" << text << "\033[0m" << std::endl;
-}
-
 Server::Server(tcp::socket sk)
     : sk_(std::move(sk)),
-      permissions_({Permissions::CONNECT, Permissions::DISCONNECT}),
-      timer_(sk_.get_executor()),
-      is_deadline_set_(false),
       buffer_(),
-      next_message_size_(0)
+      next_message_size_(0),
+      timer_(sk.get_executor()),
+      is_deadline_set_(false),
+      msg_processer_(),
+      state_(ServerError::OK)
 {
 }
 
 Server::~Server()
 {
+    if (is_deadline_set_)
+    {
+        timer_.cancel();
+    }
     std::cout << "Server destructor" << std::endl;
 }
 
 void Server::StartReceive()
 {
-    std::cout << "Server start" << std::endl;
+    // std::cout << "Server start" << std::endl;
 
     // Start by reading the size of the next message.
     boost::asio::async_read(sk_, boost::asio::buffer(&next_message_size_, sizeof(next_message_size_)),
@@ -34,6 +34,7 @@ void Server::StartReceive()
 
 void Server::size_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
+    std::cout << "Server size received callback" << std::endl;
     if (!error)
     {
 
@@ -44,14 +45,16 @@ void Server::size_received_callback(const boost::system::error_code &error, std:
     }
     else
     {
-        throw std::runtime_error("Server error exception");
+        state_ = ServerError::INTERNAL_ERROR;
     }
 }
 
 void Server::message_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
+
     if (is_deadline_set_)
     {
+        std::cout << "Server timer canceled" << std::endl;
         timer_.cancel();
     }
 
@@ -68,16 +71,39 @@ void Server::message_received_callback(const boost::system::error_code &error, s
         if (parsing_done)
         {
             std::cout << "Parsing done: " << parsing_done << std::endl;
-            handle_message(std::move(msg));
+            auto result = msg_processer_.handle_message(std::move(msg));
+
+            auto error = msg_processer_.get_state();
+
+            if (!is_continue_state(error))
+            {
+                std::cout << "Server error: " << static_cast<int>(error) << std::endl;
+                close_connection();
+                return;
+            }
+
+            if (msg_processer_.is_deadline_set())
+            {
+                wait_for_reply();
+            }
+
+            if (result)
+            {
+                send_reply(std::move(*result));
+            }
+            else
+            {
+                StartReceive();
+            }
         }
         else
         {
-            bad_data();
+            state_ = ServerError::BAD_DATA;
         }
     }
     else
     {
-        throw std::runtime_error("Server error exception");
+        state_ = ServerError::INTERNAL_ERROR;
     }
 }
 
@@ -91,62 +117,43 @@ void Server::send_callback(const boost::system::error_code &error, std::size_t b
     }
     else
     {
-        internal_error();
+        state_ = ServerError::INTERNAL_ERROR;
     }
 }
 
-void Server::handle_message(coolProtocol::MessageWrapper host_msg)
+bool Server::is_continue_state(MessageProcesser::ProcessingState error)
 {
-    PrintGreentext("Server received: " + host_msg.DebugString());
-    bool has_permission = permissions_.check_permission(host_msg);
+    bool res = false;
+    switch (error)
+    {
+    case MessageProcesser::ProcessingState::SUCCESS:
+        state_ = ServerError::OK;
+        res = true;
+        break;
+    case MessageProcesser::ProcessingState::PERMISSION_DENIED:
+        state_ = ServerError::BAD_BEHAVIOR;
+        res = false;
+        break;
+    case MessageProcesser::ProcessingState::UNKNOWN_MESSAGE:
+        state_ = ServerError::BAD_DATA;
+        res = false;
+        break;
+    case MessageProcesser::ProcessingState::INTERNAL_ERROR:
+        state_ = ServerError::INTERNAL_PROCESS_ERROR;
+        res = false;
+        break;
+    case MessageProcesser::ProcessingState::CONNECTION_CLOSE:
+        // user wants to close connection... ok
+        state_ = ServerError::OK;
+        res = false;
+        break;
 
-    if (has_permission)
-    {
-        process_message(std::move(host_msg));
+    default:
+        state_ = ServerError::UNKNOWN_ERROR;
+        res = false;
+        break;
     }
-    else
-    {
-        persimission_deny();
-    }
-}
-
-void Server::process_message(coolProtocol::MessageWrapper host_msg)
-{
-    if (host_msg.has_request())
-    {
-
-        switch (host_msg.request().command())
-        {
-        case coolProtocol::HostCommand::COMMAND_CONNECT:
-
-            ping_pong();
-            break;
-        case coolProtocol::HostCommand::COMMAND_DISCONNECT:
-            close_connection();
-            break;
-        case coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO:
-            get_device_info();
-            break;
-        default:
-            bad_data();
-            break;
-        }
-    }
-    else if (host_msg.has_pong())
-    {
-        // user is authorizedm let them do whatever they want
-        // todo: maybe add a check for the state of already authorized
-        std::cout << "Permission granted" << std::endl;
-        permissions_.reset_permission({Permissions::CONNECT,
-                                       Permissions::DISCONNECT,
-                                       Permissions::GET_DEVICE_INFO});
-        StartReceive();
-    }
-    else
-    {
-        std::cout << "Server bad data in handle message" << std::endl;
-        bad_data();
-    }
+    return res;
 }
 
 void Server::send_reply(coolProtocol::MessageWrapper reply_msg)
@@ -170,33 +177,19 @@ void Server::send_reply(coolProtocol::MessageWrapper reply_msg)
     }
     else
     {
-        internal_error();
+        state_ = ServerError::INTERNAL_ERROR;
     }
 }
 
-void Server::ping_pong()
+void Server::close_connection()
 {
-    std::cout << "Server ping" << std::endl;
-    coolProtocol::MessageWrapper ping;
-    ping.set_allocated_ping(new coolProtocol::Ping);
-
-    permissions_.reset_permission({Permissions::PONG});
-
-    send_reply(ping);
-    wait_for_reply();
-}
-
-void Server::get_device_info()
-{
-    coolProtocol::DeviceInfo *d = new coolProtocol::DeviceInfo(DeviceParser::get_device_info());
-    coolProtocol::MessageWrapper device_info;
-    device_info.set_allocated_device_data(d);
-    send_reply(device_info);
+    std::cout << "Server conn close" << std::endl;
+    sk_.close();
 }
 
 void Server::wait_for_reply(u_short deadline)
 {
-    std::cout << "Server timer" << std::endl;
+    std::cout << "Server timer armed" << std::endl;
     is_deadline_set_ = true;
     timer_.expires_from_now(boost::posix_time::seconds(deadline));
 
@@ -206,32 +199,8 @@ void Server::wait_for_reply(u_short deadline)
                             } });
 }
 
-void Server::internal_error()
-{
-    std::cout << "Server internal0 error" << std::endl;
-    close_connection();
-}
-
-void Server::bad_data()
-{
-    std::cout << "Server bad data" << std::endl;
-    close_connection();
-}
-
-void Server::persimission_deny()
-{
-    std::cout << "Server refuses to answer that" << std::endl;
-    close_connection();
-}
-
 void Server::on_timeout()
 {
-    std::cout << "Server timeout" << std::endl;
+    state_ = ServerError::TIMEOUT;
     close_connection();
-}
-
-void Server::close_connection()
-{
-    std::cout << "Server conn close" << std::endl;
-    sk_.close();
 }

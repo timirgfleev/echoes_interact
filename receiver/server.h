@@ -3,54 +3,58 @@
 #include "data.pb.h"
 #include <iostream>
 #include <boost/asio.hpp>
-
-#include "device_parser_linux.h"
-
-#include "permission_checker.h"
+#include <utility>
 
 #include "../include/constants.h"
+
+#include "message_processor.h"
 
 using boost::asio::ip::tcp;
 
 class Server
 {
 public:
+    enum class ServerError
+    {
+        OK = 0,
+        INTERNAL_ERROR = 1,
+        INTERNAL_PROCESS_ERROR = 2,
+        BAD_DATA = 3,
+        BAD_BEHAVIOR = 4,
+        TIMEOUT = 5,
+        CONNECTION_CLOSE = 6,
+        UNKNOWN_ERROR = 7,
+    };
     Server(tcp::socket sk);
 
     ~Server();
 
-    //
     void StartReceive();
 
 protected:
     void send_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
     void send_reply(coolProtocol::MessageWrapper reply_msg);
 
-    
     void size_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
     void message_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred);
-    void handle_message(coolProtocol::MessageWrapper host_msg);
-    void process_message(coolProtocol::MessageWrapper host_msg);
-
-    void ping_pong();
-    void get_device_info();
 
     void wait_for_reply(u_short deadline = user_constant::TIMEOT_LEN);
-
-    // these are error states
-    void persimission_deny();
-    void internal_error();
-    void bad_data();
     void on_timeout();
 
+    // std::unique_ptr<coolProtocol::MessageWrapper>
+    // get_device_info();
+
     void close_connection();
+    bool is_continue_state(MessageProcesser::ProcessingState error);
 
 private:
-    Permission_Chercker permissions_;
+    ServerError state_;
+
+    MessageProcesser msg_processer_;
     user_constant::MESSAGE_SIZE next_message_size_;
-    
     boost::asio::streambuf buffer_;
     tcp::socket sk_;
+
     boost::asio::deadline_timer timer_;
     bool is_deadline_set_;
 };
