@@ -204,3 +204,4 @@ void Server::on_timeout()
     state_ = ServerError::TIMEOUT;
     close_connection();
 }
+

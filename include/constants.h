@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cstdint>
 namespace user_constant
 {
     const char DELIMITER = '\n';
