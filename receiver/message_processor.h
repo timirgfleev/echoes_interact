@@ -34,8 +34,8 @@ protected:
     std::unique_ptr<coolProtocol::MessageWrapper> process_message(coolProtocol::MessageWrapper host_msg);
 
     std::unique_ptr<coolProtocol::MessageWrapper> ping_pong();
-
     std::unique_ptr<coolProtocol::MessageWrapper> get_device_info() const;
+    void disconnect();
 
 private:
     ProcessingState state_;

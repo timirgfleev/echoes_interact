@@ -2,14 +2,15 @@
 
 MessageProcesser::MessageProcesser()
     : permissions_({Permissions::CONNECT, Permissions::DISCONNECT}),
-    state_(ProcessingState::SUCCESS)
+      state_(ProcessingState::SUCCESS)
 {
 }
 
 std::unique_ptr<coolProtocol::MessageWrapper>
 MessageProcesser::handle_message(coolProtocol::MessageWrapper host_msg)
-{   
-    if(deadline_set_){
+{
+    if (deadline_set_)
+    {
         deadline_set_ = false;
     }
 
@@ -19,7 +20,6 @@ MessageProcesser::handle_message(coolProtocol::MessageWrapper host_msg)
 
     if (has_permission)
     {
-        // todo: handle errors!!!
         response = process_message(std::move(host_msg));
     }
     else
@@ -44,7 +44,8 @@ MessageProcesser::process_message(coolProtocol::MessageWrapper host_msg)
             break;
         case coolProtocol::HostCommand::COMMAND_DISCONNECT:
             // no response, just close connection
-            state_ = ProcessingState::CONNECTION_CLOSE;
+            response = nullptr;
+            disconnect();
             break;
         case coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO:
             response = get_device_info();
@@ -92,6 +93,11 @@ MessageProcesser::get_device_info() const
     auto device_info = std::make_unique<coolProtocol::MessageWrapper>();
     device_info->set_allocated_device_data(d);
     return device_info;
+}
+
+void MessageProcesser::disconnect()
+{
+    state_ = ProcessingState::CONNECTION_CLOSE;
 }
 
 bool MessageProcesser::is_deadline_set() const
