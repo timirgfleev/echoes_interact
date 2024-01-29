@@ -17,7 +17,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS proto/data.proto)
 
-add_executable(info_service receiver/main.cpp receiver/server.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(info_service receiver/main.cpp receiver/server.cpp receiver/message_processor.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 
 target_link_libraries(info_service ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 
@@ -26,6 +26,6 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
 
-add_executable(infohost host/host.cpp receiver/server.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(infohost host/host.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 
 target_link_libraries(infohost ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
