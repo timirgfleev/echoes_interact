@@ -11,13 +11,15 @@ Server::Server(tcp::socket sk)
 {
 }
 
+Server::ServerError Server::get_state() const { return state_; }
+
 Server::~Server()
 {
     if (is_deadline_set_)
     {
         timer_.cancel();
     }
-    std::cout << "Server destructor" << std::endl;
+    // std::cout << "Server destructor" << std::endl;
 }
 
 void Server::StartReceive()
@@ -29,12 +31,12 @@ void Server::StartReceive()
                             std::bind(&Server::size_received_callback, this,
                                       std::placeholders::_1, std::placeholders::_2));
 
-    std::cout << "Server start listen" << std::endl;
+    // std::cout << "Server start listen" << std::endl;
 }
 
 void Server::size_received_callback(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
-    std::cout << "Server size received callback" << std::endl;
+    // std::cout << "Server size received callback" << std::endl;
     if (!error)
     {
 
@@ -58,7 +60,7 @@ void Server::message_received_callback(const boost::system::error_code &error, s
         timer_.cancel();
     }
 
-    std::cout << "Server received " << bytes_transferred << "bytes" << std::endl;
+    std::cout << "Server received " << bytes_transferred << " bytes" << std::endl;
     if (!error)
     {
         std::istream is(&buffer_);
@@ -70,14 +72,14 @@ void Server::message_received_callback(const boost::system::error_code &error, s
 
         if (parsing_done)
         {
-            std::cout << "Parsing done: " << parsing_done << std::endl;
+            // std::cout << "Parsing done: " << parsing_done << std::endl;
             auto result = msg_processer_.handle_message(std::move(msg));
 
             auto error = msg_processer_.get_state();
 
             if (!is_continue_state(error))
             {
-                std::cout << "Server error: " << static_cast<int>(error) << std::endl;
+                // std::cout << "Server error: " << static_cast<int>(error) << std::endl;
                 close_connection();
                 return;
             }
@@ -109,8 +111,8 @@ void Server::message_received_callback(const boost::system::error_code &error, s
 
 void Server::send_callback(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
-    std::cout << "Server send callback" << std::endl;
-    std::cout << "Server sent " << bytes_transferred << "bytes" << std::endl;
+    // std::cout << "Server send callback" << std::endl;
+    std::cout << "Server sent " << bytes_transferred << " bytes" << std::endl;
     if (!error)
     {
         StartReceive();
@@ -161,7 +163,7 @@ void Server::send_reply(coolProtocol::MessageWrapper reply_msg)
     std::ostringstream stream;
     bool did_serialize = reply_msg.SerializeToOstream(&stream);
 
-    std::cout << "Server sent:" << reply_msg.DebugString() << std::endl;
+    std::cout << "Server sent: " << reply_msg.DebugString() << std::endl;
 
     if (did_serialize)
     {
@@ -204,4 +206,3 @@ void Server::on_timeout()
     state_ = ServerError::TIMEOUT;
     close_connection();
 }
-

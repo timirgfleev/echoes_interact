@@ -32,7 +32,7 @@ public:
         UNKNOWN_ERROR = 7,
     };
     Server(tcp::socket sk);
-
+    ServerError get_state() const;
     ~Server();
 
     void StartReceive();

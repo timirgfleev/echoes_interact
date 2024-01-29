@@ -23,17 +23,18 @@ void listen_for(Port port, size_t exit_after)
             tcp::socket socket(io_service);
             std::cout << "Ready for connections" << std::endl;
             acceptor.accept(socket);
-            std::cout << "conn received" << std::endl;
-            std::unique_ptr<Server> srv =
-                handle_connection(std::move(socket));
+            std::cout << "Connection received" << std::endl;
+
+            std::unique_ptr<Server> srv = handle_connection(std::move(socket));
             srv->StartReceive();
-            // v.push_back(std::move(srv));
-            // v[v.size() - 1]->StartReceive();
 
             io_service.run();
             io_service.reset();
+
+            std::cout << "Server ends with code: " << static_cast<int>(srv->get_state()) << std::endl;
+
             static size_t i = 0;
-            std::cout << i++ << "io service dead\n\n"
+            std::cout << i++ << " io service dead\n\n"
                       << std::endl;
             if (i == exit_after)
             {
