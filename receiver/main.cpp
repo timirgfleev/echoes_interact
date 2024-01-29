@@ -1,47 +1,46 @@
 #include <iostream>
 #include <boost/asio.hpp>
-//#include "server.h"
+// #include "server.h"
 #include "launcher.h"
 
 using boost::asio::ip::tcp;
 
-
 const Port DEF_PORT = Port(1234);
-
 
 void launcher(int argc, char *argv[])
 {
-        try
+    try
     {
-
         switch (argc)
         {
-        case 0:
-
-            break;
         case 2:
-            if (std::string(argv[0]) == "-r")
+            if (std::string(argv[1]) == "-r")
             {
                 listen_for(DEF_PORT, 3);
             }
-            else if (std::string(argv[0]) == "-p")
+            break;
+        case 3:
+            if (std::string(argv[1]) == "-p")
             {
-                listen_for(std::stoi(argv[1]), 3);
-            } else if (std::string(argv[0]) == "-e")
+                listen_for(std::stoi(argv[2]), 3);
+            }
+            else if (std::string(argv[1]) == "-e")
             {
-                listen_for(DEF_PORT, std::stoi(argv[1]));
-            } else {
+                listen_for(DEF_PORT, std::stoi(argv[2]));
+            }
+            else
+            {
                 throw std::exception();
             }
             break;
-        case 4:
-            if (std::string(argv[0]) == "-p" && std::string(argv[2]) == "-e")
+        case 5:
+            if (std::string(argv[1]) == "-p" && std::string(argv[3]) == "-e")
             {
-                listen_for(std::stoi(argv[1]), std::stoi(argv[3]));
+                listen_for(std::stoi(argv[2]), std::stoi(argv[4]));
             }
-            else if (std::string(argv[0]) == "-e" && std::string(argv[2]) == "-p")
+            else if (std::string(argv[1]) == "-e" && std::string(argv[3]) == "-p")
             {
-                listen_for(std::stoi(argv[3]), std::stoi(argv[1]));
+                listen_for(std::stoi(argv[4]), std::stoi(argv[2]));
             }
             else
             {
