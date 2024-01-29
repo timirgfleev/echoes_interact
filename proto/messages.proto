@@ -3,7 +3,7 @@ syntax = "proto2";
 package coolProtocol;
 
 
-
+//message of type HostCommand contains an optional command field of type Command xd
 message HostCommand {
   enum Command {
     COMMAND_CONNECT = 0;
@@ -21,6 +21,7 @@ message DeviceInfo {
   repeated string desc = 4;
 }
 
+// these 3 are primary messages. They are the ones being sent
 message Ping {
 }
 
