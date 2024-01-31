@@ -2,6 +2,7 @@
 
 This project is a server-client application that uses Google's Protocol Buffers for communication.
 
+
 ## Server description
 
 ### Event Sequence
@@ -115,8 +116,12 @@ ctest
 - `receiver/message_processor.h`: Contains the definition of the MessageProcessor class.
 
 - `include/constants.h`: Contains constant values used throughout the project.
+- `include/message_creator.h`: Contanins declaration for message factories.
+- `include/message_creator.cpp`: Implements `message_creator.h` declarations.
+
 
 - `host/host.cpp`: Contains the main function of the client.
+
 
 - `test/cmd_args.cpp`: Contains tests for the launcher.
 - `test/msg_process.cpp`: Contains tests for the message processor.
