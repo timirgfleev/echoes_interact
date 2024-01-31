@@ -78,22 +78,16 @@ std::unique_ptr<coolProtocol::MessageWrapper>
 MessageProcesser::ping_pong()
 {
     std::cout << "Server ping" << std::endl;
-    auto ping = std::make_unique<coolProtocol::MessageWrapper>();
-    ping->set_allocated_ping(new coolProtocol::Ping);
-
     permissions_.reset_permission({Permissions::PONG});
 
     deadline_set_ = true;
-    return ping;
+    return msgCreators::Pong().create();
 }
 
 std::unique_ptr<coolProtocol::MessageWrapper>
 MessageProcesser::get_device_info() const
 {
-    coolProtocol::DeviceInfo *d = new coolProtocol::DeviceInfo(DeviceParser::get_device_info());
-    auto device_info = std::make_unique<coolProtocol::MessageWrapper>();
-    device_info->set_allocated_device_data(d);
-    return device_info;
+    return msgCreators::DeviceInfo().create();
 }
 
 void MessageProcesser::disconnect()

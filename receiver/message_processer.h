@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "messages.pb.h"
+#include "../include/message_creator.h"
 
 #include "device_parser_linux.h"
 #include "permission_checker.h"

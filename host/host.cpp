@@ -1,44 +1,12 @@
 #include <iostream>
 #include <boost/asio.hpp>
 
-#include "messages.pb.h"
+#include "../include/message_creator.h"
 #include "../include/constants.h"
 
 using boost::asio::ip::tcp;
 
-coolProtocol::MessageWrapper make_pong_message()
-{
-    std::cout << "pong" << std::endl;
-
-    coolProtocol::MessageWrapper msg;
-    coolProtocol::Pong *pong = new coolProtocol::Pong();
-    msg.set_allocated_pong(pong);
-
-    return std::move(msg);
-}
-
-coolProtocol::MessageWrapper make_ping_message()
-{
-    std::cout << "ping" << std::endl;
-
-    coolProtocol::MessageWrapper msg;
-    coolProtocol::Ping *ping = new coolProtocol::Ping();
-    msg.set_allocated_ping(ping);
-
-    return std::move(msg);
-}
-
-coolProtocol::MessageWrapper make_host_command(coolProtocol::HostCommand::Command command)
-{
-    std::cout << "host command" << std::endl;
-
-    coolProtocol::MessageWrapper msg;
-    coolProtocol::HostCommand *host_command = new coolProtocol::HostCommand();
-    host_command->set_command(command);
-    msg.set_allocated_request(host_command);
-
-    return std::move(msg);
-}
+const std::string DEF_HOST = "localhost";
 
 coolProtocol::MessageWrapper listen_to_message(tcp::socket &client_socket)
 {
@@ -59,13 +27,13 @@ coolProtocol::MessageWrapper listen_to_message(tcp::socket &client_socket)
     return std::move(response);
 }
 
-size_t send_message(tcp::socket &client_socket, coolProtocol::MessageWrapper &msg)
+size_t send_message(tcp::socket &client_socket, msgCreators::Message_UPTR msg)
 {
     std::string serialized_msg;
-    bool did_serialize = msg.SerializeToString(&serialized_msg);
+    bool did_serialize = msg->SerializeToString(&serialized_msg);
 
     std::cout << "serialize:" << did_serialize << std::endl;
-    std::cout << "Serialized message as debug str:" << msg.DebugString() << std::endl;
+    std::cout << "Serialized message as debug str:" << msg->DebugString() << std::endl;
 
     // size_t -> uint32 to make len fixed (size_t can be different)
     config::MESSAGE_SIZE msg_size = serialized_msg.size();
@@ -73,14 +41,14 @@ size_t send_message(tcp::socket &client_socket, coolProtocol::MessageWrapper &ms
     auto bytes_sent = boost::asio::write(client_socket, boost::asio::buffer(&msg_size, sizeof(msg_size)));
 
     // Then, send the message itself
-    bytes_sent+= boost::asio::write(client_socket, boost::asio::buffer(serialized_msg));
+    bytes_sent += boost::asio::write(client_socket, boost::asio::buffer(serialized_msg));
 
     return bytes_sent;
 }
 
 tcp::socket make_socket(boost::asio::io_service &io_service,
-                        std::string host = "localhost",
-                        std::string port = "1234")
+                        std::string host = DEF_HOST,
+                        std::string port = std::to_string(config::DEF_PORT))
 {
     tcp::resolver resolver(io_service);
     tcp::resolver::query query(host, port);
@@ -102,29 +70,29 @@ void printMenu()
               << std::endl;
 }
 
-coolProtocol::MessageWrapper process_user_request(int choice, bool &loop, int &wait_for_reply)
+msgCreators::Message_UPTR process_user_request(int choice, bool &loop, int &wait_for_reply)
 {
-    coolProtocol::MessageWrapper msg;
+    msgCreators::Message_UPTR msg(nullptr);
     switch (choice)
     {
     case 0:
         loop = false;
         break;
     case 1:
-        msg = make_host_command(coolProtocol::HostCommand::COMMAND_CONNECT);
+        msg = msgCreators::CommandConnect().create();
         wait_for_reply = 1;
         break;
     case 2:
-        msg = make_host_command(coolProtocol::HostCommand::COMMAND_DISCONNECT);
-        //wait for reply so read drops program
+        msg = msgCreators::CommandDisconnect().create();
+        // wait for reply so read drops program
         wait_for_reply = 1;
         break;
     case 3:
-        msg = make_host_command(coolProtocol::HostCommand::COMMAND_GET_DEVICE_INFO);
+        msg = msgCreators::CommandGetInfo().create();
         wait_for_reply = 1;
         break;
     case 4:
-        msg = make_pong_message();
+        msg = msgCreators::Pong().create();
         wait_for_reply = 0;
         break;
     default:
@@ -147,9 +115,13 @@ void chat(tcp::socket &client_socket)
 
         int wait_for_reply;
         auto msg = process_user_request(choice, loop, wait_for_reply);
-        if (msg.IsInitialized())
+
+        if(msg == nullptr)
+            break;
+
+        if (msg->IsInitialized())
         {
-            size_t bytes_transfered = send_message(client_socket, msg);
+            size_t bytes_transfered = send_message(client_socket, std::move(msg));
             std::cout << "Sent " << bytes_transfered << " bytes" << std::endl;
             if (wait_for_reply)
             {
