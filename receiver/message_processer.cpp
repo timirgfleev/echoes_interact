@@ -7,15 +7,14 @@ MessageProcesser::MessageProcesser()
 {
 }
 
-std::unique_ptr<coolProtocol::MessageWrapper>
-MessageProcesser::handle_message(coolProtocol::MessageWrapper host_msg)
+msgCreators::Message_UPTR MessageProcesser::handle_message(coolProtocol::MessageWrapper host_msg)
 {
     if (deadline_set_)
     {
         deadline_set_ = false;
     }
 
-    std::unique_ptr<coolProtocol::MessageWrapper> response(nullptr);
+    msgCreators::Message_UPTR response(nullptr);
     // PrintGreentext("Server received: " + host_msg.DebugString());
     bool has_permission = permissions_.check_permission(host_msg);
 
@@ -30,10 +29,9 @@ MessageProcesser::handle_message(coolProtocol::MessageWrapper host_msg)
     return response;
 }
 
-std::unique_ptr<coolProtocol::MessageWrapper>
-MessageProcesser::process_message(coolProtocol::MessageWrapper host_msg)
+msgCreators::Message_UPTR MessageProcesser::process_message(coolProtocol::MessageWrapper host_msg)
 {
-    std::unique_ptr<coolProtocol::MessageWrapper> response;
+    msgCreators::Message_UPTR response;
 
     if (host_msg.has_request())
     {
@@ -74,8 +72,7 @@ MessageProcesser::process_message(coolProtocol::MessageWrapper host_msg)
     return response;
 }
 
-std::unique_ptr<coolProtocol::MessageWrapper>
-MessageProcesser::ping_pong()
+msgCreators::Message_UPTR MessageProcesser::ping_pong()
 {
     std::cout << "Server ping" << std::endl;
     permissions_.reset_permission({Permissions::PONG});
@@ -84,8 +81,7 @@ MessageProcesser::ping_pong()
     return msgCreators::Pong().create();
 }
 
-std::unique_ptr<coolProtocol::MessageWrapper>
-MessageProcesser::get_device_info() const
+msgCreators::Message_UPTR MessageProcesser::get_device_info() const
 {
     return msgCreators::DeviceInfo().create();
 }
@@ -100,8 +96,7 @@ bool MessageProcesser::is_deadline_set() const
     return deadline_set_;
 }
 
-MessageProcesser::ProcessingState
-MessageProcesser::get_state() const
+MessageProcesser::ProcessingState MessageProcesser::get_state() const
 {
     return state_;
 }

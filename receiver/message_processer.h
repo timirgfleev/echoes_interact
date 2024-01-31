@@ -30,18 +30,17 @@ public:
 
     MessageProcesser();
 
-    std::unique_ptr<coolProtocol::MessageWrapper>
-    handle_message(coolProtocol::MessageWrapper host_msg);
+    msgCreators::Message_UPTR handle_message(coolProtocol::MessageWrapper host_msg);
 
     ProcessingState get_state() const;
 
     bool is_deadline_set() const;
 
 protected:
-    std::unique_ptr<coolProtocol::MessageWrapper> process_message(coolProtocol::MessageWrapper host_msg);
+    msgCreators::Message_UPTR process_message(coolProtocol::MessageWrapper host_msg);
 
-    std::unique_ptr<coolProtocol::MessageWrapper> ping_pong();
-    std::unique_ptr<coolProtocol::MessageWrapper> get_device_info() const;
+    msgCreators::Message_UPTR ping_pong();
+    msgCreators::Message_UPTR get_device_info() const;
     void disconnect();
 
 private:
